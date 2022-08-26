@@ -186,21 +186,24 @@ def create_app(test_config=None):
         questionsQuery = Question.query.filter_by(
             category=quizCategory['id']).all()
     
-    # if there is no question in that category or the category does not exist, rise 404 error
-    if len(questionsQuery) == 0:
-        abort(404)
-
     # randomization
-    randomIndex = random.randint(0, len(questionsQuery)-1)
-    questionToPlay = questionsQuery[randomIndex]
-    
-    # retrive an unplayed question
-    while questionToPlay.id not in previousQuestion:
+    question_list = list(range(0, len(questionsQuery)))
+    list_random_indexes = random.sample(question_list, len(question_list))
+    for i in range(0, len(list_random_indexes)):
+        randomIndex = list_random_indexes[i]
         questionToPlay = questionsQuery[randomIndex]
-        return jsonify({
+        if questionToPlay.id not in previousQuestion:
+            return jsonify({
             'success': True,
             'question': questionToPlay.format()
-        })
+            }), 200
+
+    # if all question in a specific category is used, return an empty response
+    return jsonify({
+        'success': True,
+        'question': None
+        }), 200
+    
 
   #error handlers
   @app.errorhandler(400)
